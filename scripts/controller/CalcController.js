@@ -82,16 +82,69 @@ class CalcController{
 
     getLastOperation(){
 
-      return this._operation[this._operation - 1]
+      return this._operation[this._operation.length - 1]
 
+    }
+
+    setLastOpration(value){
+
+        this._operation[this._operation.length - 1 ] = value
     }
 
     isOperator(value){
 
         //o indexOf verifica se o valor passado no parametro existe dentro do array
-       return ['+', '-', '/', '*', '%'].indexOf(value) > -1
+      return(['+', '-', '*', '%', '/'].indexOf(value) > -1);
     }
 
+    pushOperation(value){
+
+        this._operation.push(value);
+
+        //Esse if serve para verificar as posições do array pra realizar os calculos e já jogar na tela
+      if(this._operation.length > 3){
+
+            this.calc()
+      }
+    }
+
+    calc(){
+        //o ultimo operador do array será salvo na variavel last, e será feito o calculo dos primeiros
+        // pares do array
+        let last = this._operation.pop()
+        
+
+        //esse trecho de codigo comentado serve para pegar a penultima posição
+        // esse trecho pode ser ultilizado caso o usuario use o igual para somar o resultado com 
+        // o penultimo valor que tinha sido posto 
+
+        // let penultima = this._operation[this._operation.length - 1];
+
+        // if(!isNaN(penultima)){
+        //     console.log('Penultima', penultima);
+        // } else {
+        //     console.log('é operador cara')
+        // }
+        
+
+        
+
+        // o join irá juntar as 3 primeiras posições do array
+        // o eval irá realizar a operação dessa junção
+        //result irá receber o resultado desta operação e irá coloca-lo na 1ª posição do array
+        let result = eval(this._operation.join(""))
+
+        // agora o array this._operation irá receber resulta na 1ª posição
+        // a segunda posição do array será a variavel last, que ficou guardada após a 3ª posição
+        //do array ser preenchida
+        this._operation = [result, last]
+         
+    }
+
+    setLastNumberToDisplay(){
+
+
+    }
 
     addOperation(value){
 
@@ -99,25 +152,37 @@ class CalcController{
             // não for numero 
             if(this.isOperator(value)){
                 //troca o sinal
-                this._operation[this._operation - 1] = value
-            }else {
+                //this._operation[this._operation.length - 1] = value
+                this.setLastOpration(value)
 
-            }
+            }else if(isNaN(value)) {
+                //outra coisa
+                console.log('outra coisa',value)
+            } else {
+                    this.pushOperation(value);
+                }
              
         }
         else {
-            // se for numero
+            //se for operador ele entre nesse laço
+            if(this.isOperator(value)){
+
+                this.pushOperation(value);    
+
+            } else {
+                // se for numero
 
             //o getLastOperation pega a ultima opercao, neste caso um numero
             // converte ele em string e junta com o valor do parametro que tbm foi concatenado em string
-           let newValue = this.getLastOperation().toString() + value.toString()
-            
-           this._operation.push(newValue)
+           let newValue = this.getLastOperation().toString() + value.toString();
+           this.setLastOpration(parseInt(newValue))
+
+           //setLastNumberToDisplay()
+           //atualizar display
+            } 
 
         }
 
-       
-        console.log(this._operation)
     }
 
     setError(){
@@ -137,7 +202,7 @@ class CalcController{
                 break;
 
             case 'soma':
-               
+                this.addOperation('+')
                 break;
 
             case 'igual':
@@ -145,23 +210,23 @@ class CalcController{
                 break;
 
             case 'subtracao':
-               
+                this.addOperation('-')
                 break;
             
             case 'multiplicacao':
-               
+                this.addOperation('*')
                 break;
             
             case 'divisao':
-               
+                this.addOperation('/')
                 break;
             
             case 'porcento':
-                
+                this.addOperation('%')
                 break;
             
             case 'ponto':
-               
+                this.addOperation('.')
                 break;
             
             case '0':      
@@ -175,7 +240,7 @@ class CalcController{
             case '8':            
             case '9':
 
-                this.addOperation(parseInt(value))
+                this.addOperation(parseInt(value));
                 break; 
 
             default:
