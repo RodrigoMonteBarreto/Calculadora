@@ -76,6 +76,9 @@ class CalcController {
 
     clearAll() {
         this._operation = [];
+        this._lastNumber = '';
+        this._lastOperation = '';
+        
         this.setLastNumberToDisplay();
     }
 
@@ -239,10 +242,7 @@ class CalcController {
                 //this._operation[this._operation.length - 1] = value
                 this.setLastOpration(value)
 
-            } else if (isNaN(value)) {
-                //outra coisa
-                console.log('outra coisa', value)
-            } else {
+            }  else {
                 this.pushOperation(value);
                 this.setLastNumberToDisplay()
             }
@@ -260,7 +260,7 @@ class CalcController {
                 //o getLastOperation pega a ultima opercao, neste caso um numero
                 // converte ele em string e junta com o valor do parametro que tbm foi concatenado em string
                 let newValue = this.getLastOperation().toString() + value.toString();
-                this.setLastOpration(parseInt(newValue))
+                this.setLastOpration(parseFloat(newValue))
 
                 this.setLastNumberToDisplay()
                 //atualizar display
@@ -270,8 +270,30 @@ class CalcController {
 
     }
 
+
     setError() {
         this.displayCalc = "Error"
+    }
+
+
+
+    //esse metodo irá tratar sobre o ponto quando ele for clicado
+    // irá tratar das possibilidades que podem acontecer quando digita ponto
+    addDot(){
+
+        //salva a ultima posicao no array
+       let lastOperation = this.getLastOperation()
+
+        //pergunta se é operador ou se é nulo
+       if(this.isOperator(lastOperation) || !lastOperation){
+           this.pushOperation('0.')
+       } 
+       // se for numero, sobreescreve a ultima operação
+       else {
+           this.setLastOpration(lastOperation.toString() + '.')
+       }
+
+       this.setLastNumberToDisplay();
     }
 
 
@@ -311,7 +333,7 @@ class CalcController {
                 break;
 
             case 'ponto':
-                this.addOperation('.')
+                this.addDot()
                 break;
 
             case '0':
