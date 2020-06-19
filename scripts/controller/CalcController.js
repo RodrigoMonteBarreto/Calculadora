@@ -2,18 +2,52 @@ class CalcController {
 
 
     constructor() {
+        this._audio = new Audio('click.mp3')
+        this._audioOnOff = false
         this._lastOperation = ''
         this._lastNumber = ''
+
         this._operation = []
         this._locale = 'pt-BR'
         this._displayCalcEl = document.querySelector("#display");
         this._dateEl = document.querySelector("#data");
         this._timeEl = document.querySelector("#hora");
         this._currentDate;
+
         this.initialize();
         this.initButtonsEvents();
+        this.initKeyBoard();
+        this.pasteFromClipboard()
 
     }
+
+    pasteFromClipboard() {
+
+        document.addEventListener('paste', e => {
+
+            let text = e.clipboardData.getData('Text')
+
+            this.displayCalc = parseFloat(text)
+
+        })
+    }
+
+    copyToClipboard() {
+
+        let input = document.createElement('input')
+
+        input.value = this.displayCalc
+
+        document.body.appendChild(input)
+
+        input.select()
+
+        document.execCommand("Copy")
+
+        input.remove()
+
+    }
+
 
     initialize() {
 
@@ -29,7 +63,99 @@ class CalcController {
         }, 1000)
 
         this.setLastNumberToDisplay()
+        this.pasteFromClipboard()
+
+        document.querySelectorAll('.btn-ac').forEach(btn => {
+
+            btn.addEventListener('dblclick', e => {
+
+                this.toggleAudio()
+            })
+        })
+
     }
+
+    toggleAudio() {
+
+        // duas maneiras diferentes de fazer a mesma logica 
+        //this._audioOnOff = (this._audioOnOff) ? false: true;
+        this._audioOnOff = !this._audioOnOff
+
+        // if(this._audioOnOff){
+        //     this._audioOnOff = false
+        // } else {
+        //     this._audioOnOff = true
+        // }
+
+    }
+
+    playerAudio() {
+
+        if (this._audioOnOff) {
+            this._audio.currentTime = 0
+            //o metodo play() é nativo do javascript
+            this._audio.play()
+        }
+    }
+
+    //metodo para inicializar eventos de teclado
+    initKeyBoard() {
+
+        //keyup serve para quando o usuario apertar um tecla no teclado
+        document.addEventListener('keyup', e => {
+            //chama o metodo de ativar audio
+            this.playerAudio()
+
+            switch (e.key) {
+                case 'Escape':
+                    this.clearAll()
+                    break;
+
+                case 'Backspace':
+                    this.clearEntry()
+                    break;
+
+                case '+':
+                case '-':
+                case '/':
+                case '*':
+                case '%':
+                    this.addOperation(e.key)
+                    break;
+
+                case 'Enter':
+                case '=':
+                    this.calc()
+                    break;
+
+                case '.':
+                case ',':
+                    this.addDot();
+                    break;
+
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+
+                    this.addOperation(parseInt(e.key));
+                    break;
+
+                //verificar se o control foi segurado junto com a tecla c
+                case 'c':
+                    if (e.ctrlKey) this.copyToClipboard()
+                    break;
+            }
+
+        })
+    }
+
 
     initButtonsEvents() {
 
@@ -78,7 +204,7 @@ class CalcController {
         this._operation = [];
         this._lastNumber = '';
         this._lastOperation = '';
-        
+
         this.setLastNumberToDisplay();
     }
 
@@ -119,8 +245,16 @@ class CalcController {
 
 
     getResult() {
+        try {
+            return eval(this._operation.join(""))
+        }
+        catch (err) {
 
-        return eval(this._operation.join(""))
+            setTimeout(()=>{
+                this.setError()
+            }, 1)
+           
+        }
     }
 
     calc() {
@@ -129,7 +263,7 @@ class CalcController {
         this._lastOperation = this.getLastItem()
 
         //verificae se vetor é menor que 3
-        if(this._operation.length < 3){
+        if (this._operation.length < 3) {
 
             //salva o primeiro item
             let fisrtItem = this._operation[0]
@@ -147,8 +281,8 @@ class CalcController {
         }
 
         //verificar se o vetor é igual a 3
-        else if(this._operation.length ==3){
- 
+        else if (this._operation.length == 3) {
+
             this._lastNumber = this.getLastItem(false)
         }
 
@@ -203,7 +337,7 @@ class CalcController {
         let lastItem
 
         for (let i = this._operation.length - 1; i >= 0; i--) {
-           
+
             if (this.isOperator(this._operation[i]) == isOperator) {
                 lastItem = this._operation[i]
                 break
@@ -211,7 +345,7 @@ class CalcController {
         }
 
         //verifica se o lastItem está vazio
-        if(!lastItem){
+        if (!lastItem) {
             //executa um if ternario
             lastItem = (isOperator) ? this._lastOperation : this._lastNumber;
         }
@@ -222,8 +356,8 @@ class CalcController {
 
     //este metodo serve para atualizar o display da tela 
     setLastNumberToDisplay() {
-        
-        let lastNumber = this.getLastItem( false)
+
+        let lastNumber = this.getLastItem(false)
 
         // essa condição verifica se existe algum numero nessa variavel
         //se ele for nulo, retorna 0
@@ -242,7 +376,7 @@ class CalcController {
                 //this._operation[this._operation.length - 1] = value
                 this.setLastOpration(value)
 
-            }  else {
+            } else {
                 this.pushOperation(value);
                 this.setLastNumberToDisplay()
             }
@@ -260,7 +394,7 @@ class CalcController {
                 //o getLastOperation pega a ultima opercao, neste caso um numero
                 // converte ele em string e junta com o valor do parametro que tbm foi concatenado em string
                 let newValue = this.getLastOperation().toString() + value.toString();
-                this.setLastOpration(parseFloat(newValue))
+                this.setLastOpration(newValue)
 
                 this.setLastNumberToDisplay()
                 //atualizar display
@@ -276,28 +410,34 @@ class CalcController {
     }
 
 
-
     //esse metodo irá tratar sobre o ponto quando ele for clicado
     // irá tratar das possibilidades que podem acontecer quando digita ponto
-    addDot(){
+    addDot() {
 
         //salva a ultima posicao no array
-       let lastOperation = this.getLastOperation()
+        let lastOperation = this.getLastOperation()
+
+        //faz verificação se lastOperation é do tipo string
+        //procura no lasoperation usando o split se tem algum ponto, se já tiver, não permitir adiconar outro
+
+        if (typeof lastOperation === 'string' && lastOperation.split('').indexOf('.') > -1) return;
 
         //pergunta se é operador ou se é nulo
-       if(this.isOperator(lastOperation) || !lastOperation){
-           this.pushOperation('0.')
-       } 
-       // se for numero, sobreescreve a ultima operação
-       else {
-           this.setLastOpration(lastOperation.toString() + '.')
-       }
+        if (this.isOperator(lastOperation) || !lastOperation) {
+            this.pushOperation('0.')
+        }
+        // se for numero, sobreescreve a ultima operação
+        else {
+            this.setLastOpration(lastOperation.toString() + '.')
+        }
 
-       this.setLastNumberToDisplay();
+        this.setLastNumberToDisplay();
     }
 
 
     execBtn(value) {
+
+        this.playerAudio();
 
         switch (value) {
             case 'ac':
@@ -408,8 +548,14 @@ class CalcController {
         return this._displayCalcEl.innerHTML
     }
 
-    set displayCalc(valor) {
-        this._displayCalcEl.innerHTML = valor
+    set displayCalc(value) {
+
+        if (value.toString().length > 10) {
+            this.setError()
+            return false
+        }
+
+        this._displayCalcEl.innerHTML = value
     }
 
     get currentDate() {
